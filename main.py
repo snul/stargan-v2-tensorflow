@@ -16,6 +16,9 @@ from utils import *
 def parse_args():
     desc = "Tensorflow implementation of StarGAN_v2"
     parser = argparse.ArgumentParser(description=desc)
+    
+    parser.add_argument('--dataset_path', type=str, help='dataset path')
+    
     parser.add_argument('--phase', type=str, default='train', help='train or test ?')
     parser.add_argument('--merge', type=str2bool, default=True, help='In test phase, merge reference-guided image result or not')
     parser.add_argument('--merge_size', type=int, default=0, help='merge size matching number')
@@ -66,16 +69,16 @@ def parse_args():
 """checking arguments"""
 def check_args(args):
     # --checkpoint_dir
-    check_folder(args.checkpoint_dir)
+#    check_folder(args.checkpoint_dir)
 
     # --result_dir
-    check_folder(args.result_dir)
+#    check_folder(args.result_dir)
 
     # --result_dir
-    check_folder(args.log_dir)
+#    check_folder(args.log_dir)
 
     # --sample_dir
-    check_folder(args.sample_dir)
+#    check_folder(args.sample_dir)
 
     # --epoch
     try:

@@ -70,20 +70,24 @@ class StarGAN_v2():
         """ Discriminator """
         self.sn = args.sn
 
-        self.sample_dir = os.path.join(args.sample_dir, self.model_dir)
+        sample_dir = os.path.join(args.dataset_path, args.sample_dir)
+        self.sample_dir = os.path.join(sample_dir, self.model_dir)
         check_folder(self.sample_dir)
 
-        self.checkpoint_dir = os.path.join(args.checkpoint_dir, self.model_dir)
+        checkpoint_dir = os.path.join(args.dataset_path, args.checkpoint_dir)
+        self.checkpoint_dir = os.path.join(checkpoint_dir, self.model_dir)
         check_folder(self.checkpoint_dir)
 
-        self.log_dir = os.path.join(args.log_dir, self.model_dir)
+        log_dir = os.path.join(args.dataset_path, args.log_dir)
+        self.log_dir = os.path.join(log_dir, self.model_dir)
         check_folder(self.log_dir)
 
-        self.result_dir = os.path.join(args.result_dir, self.model_dir)
+        result_dir = os.path.join(args.dataset_path, args.result_dir)
+        self.result_dir = os.path.join(result_dir, self.model_dir)
         check_folder(self.result_dir)
 
 
-        dataset_path = './dataset'
+        dataset_path = args.dataset_path
 
         self.dataset_path = os.path.join(dataset_path, self.dataset_name, 'train')
         self.test_dataset_path = os.path.join(dataset_path, self.dataset_name, 'test')
