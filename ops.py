@@ -10,7 +10,7 @@ Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 
 import tensorflow as tf
 import tensorflow_addons as tfa
-from utils import pytorch_kaiming_weight_factor
+from .utils import pytorch_kaiming_weight_factor
 import math
 
 ##################################################################################

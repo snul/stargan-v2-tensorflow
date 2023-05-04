@@ -8,7 +8,7 @@ http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to
 Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 """
 
-from ops import *
+from .ops import *
 from tensorflow.keras import Sequential
 import numpy as np
 

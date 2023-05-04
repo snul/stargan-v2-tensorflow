@@ -8,16 +8,25 @@ http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to
 Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 """
 
-from StarGAN_v2 import StarGAN_v2
+from .StarGAN_v2 import StarGAN_v2
 import argparse
-from utils import *
+from .utils import *
 
 """parsing and configuration"""
-def parse_args():
+def parse_args(args):
     desc = "Tensorflow implementation of StarGAN_v2"
     parser = argparse.ArgumentParser(description=desc)
     
     parser.add_argument('--dataset_path', type=str, help='dataset path')
+    
+    parser.add_argument('--test_src_dir', type=str, help='test src path')
+    parser.add_argument('--test_ref_dir', type=str, help='test ref path')
+    
+    parser.add_argument('--custom_domain_list', type=str, help='only consider the given domains when testing')
+    parser.add_argument('--latent_guided_synthesis', type=str2bool, default=True, help='In test phase, if latent guided synthesis should be performed')
+    parser.add_argument('--reference_guided_synthesis', type=str2bool, default=True, help='In test phase, if reference guided synthesis should be performed')
+    
+    parser.add_argument('--debug_logging', type=str2bool, default=True, help='If debug logging should be performed')
     
     parser.add_argument('--phase', type=str, default='train', help='train or test ?')
     parser.add_argument('--merge', type=str2bool, default=True, help='In test phase, merge reference-guided image result or not')
@@ -63,7 +72,10 @@ def parse_args():
     parser.add_argument('--sample_dir', type=str, default='samples',
                         help='Directory name to save the samples on training')
 
-    return check_args(parser.parse_args())
+    if args is None:
+        return check_args(parser.parse_args())
+
+    return check_args(parser.parse_args(args))
 
 
 """checking arguments"""
@@ -94,10 +106,10 @@ def check_args(args):
     return args
 
 """main"""
-def main():
+def main(custom_args=None):
 
-    args = parse_args()
-
+    args = parse_args(custom_args)
+    
     automatic_gpu_usage()
 
     gan = StarGAN_v2(args)
@@ -109,8 +121,7 @@ def main():
     if args.phase == 'train' :
         gan.train()
         print(" [*] Training finished!")
-
-    else :
+    else:
         gan.test(args.merge, args.merge_size)
         print(" [*] Test finished!")
 
