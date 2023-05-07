@@ -11,6 +11,9 @@ Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 from .StarGAN_v2 import StarGAN_v2
 import argparse
 from .utils import *
+import time
+
+gan = False
 
 """parsing and configuration"""
 def parse_args(args):
@@ -112,20 +115,41 @@ def main(custom_args=None):
     
     automatic_gpu_usage(args.debug_logging)
 
-    gan = StarGAN_v2(args)
-
-    # build graph
-    gan.build_model()
-
-
     if args.phase == 'train' :
         gan.train()
         print(" [*] Training finished!")
     else:
+        global gan
+        
+        if not gan:
+            print("Model not build yet, building...")
+            gan = StarGAN_v2(args)
+
+            # build graph
+            gan.build_model()
+        else: 
+            print("Model already build, reload...")
+            
+            generator_ema = gan.generator_ema
+            mapping_network_ema = gan.mapping_network_ema
+            style_encoder_ema = gan.style_encoder_ema
+            ckpt = gan.ckpt
+            manager = gan.manager
+
+            gan = StarGAN_v2(args)
+
+            # build graph
+            gan.generator_ema = generator_ema
+            gan.mapping_network_ema = mapping_network_ema
+            gan.style_encoder_ema = style_encoder_ema
+            gan.ckpt = ckpt
+            gan.manager = manager
+
+            gan.build_model(reload_checkpoint_only=True)
+            
         gan.test(args.merge, args.merge_size)
         if args.debug_logging:
             print(" [*] Test finished!")
-
 
 
 if __name__ == '__main__':

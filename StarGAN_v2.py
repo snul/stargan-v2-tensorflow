@@ -137,7 +137,7 @@ class StarGAN_v2():
     ##################################################################################
     # Model
     ##################################################################################
-    def build_model(self):
+    def build_model(self, reload_checkpoint_only=False):
         if self.phase == 'train':
             """ Input Image"""
             img_class = Image_data(self.img_size, self.img_ch, self.dataset_path, self.domain_list, self.augment_flag)
@@ -209,25 +209,32 @@ class StarGAN_v2():
         else:
             """ Test """
             """ Network """
-            self.generator_ema = Generator(self.img_size, self.img_ch, self.style_dim, max_conv_dim=self.hidden_dim, sn=False, name='Generator')
-            self.mapping_network_ema = MappingNetwork(self.style_dim, self.hidden_dim, self.num_domains, sn=False, name='MappingNetwork')
-            self.style_encoder_ema = StyleEncoder(self.img_size, self.style_dim, self.num_domains, max_conv_dim=self.hidden_dim, sn=False, name='StyleEncoder')
+            curr_time = round(time.time()*1000)
 
-            """ Finalize model (build) """
-            x = np.ones(shape=[self.batch_size, self.img_size, self.img_size, self.img_ch], dtype=np.float32)
-            y = np.ones(shape=[self.batch_size, 1], dtype=np.int32)
-            z = np.ones(shape=[self.batch_size, self.latent_dim], dtype=np.float32)
-            s = np.ones(shape=[self.batch_size, self.style_dim], dtype=np.float32)
+            if not reload_checkpoint_only:
+                self.generator_ema = Generator(self.img_size, self.img_ch, self.style_dim, max_conv_dim=self.hidden_dim, sn=False, name='Generator')
+                self.mapping_network_ema = MappingNetwork(self.style_dim, self.hidden_dim, self.num_domains, sn=False, name='MappingNetwork')
+                self.style_encoder_ema = StyleEncoder(self.img_size, self.style_dim, self.num_domains, max_conv_dim=self.hidden_dim, sn=False, name='StyleEncoder')
 
-            _ = self.mapping_network_ema([z, y])
-            _ = self.style_encoder_ema([x, y])
-            _ = self.generator_ema([x, s])
+                """ Finalize model (build) """
+                x = np.ones(shape=[self.batch_size, self.img_size, self.img_size, self.img_ch], dtype=np.float32)
+                y = np.ones(shape=[self.batch_size, 1], dtype=np.int32)
+                z = np.ones(shape=[self.batch_size, self.latent_dim], dtype=np.float32)
+                s = np.ones(shape=[self.batch_size, self.style_dim], dtype=np.float32)
 
-            """ Checkpoint """
-            self.ckpt = tf.train.Checkpoint(generator_ema=self.generator_ema,
-                                            mapping_network_ema=self.mapping_network_ema,
-                                            style_encoder_ema=self.style_encoder_ema)
-            self.manager = tf.train.CheckpointManager(self.ckpt, self.checkpoint_dir, max_to_keep=1)
+                print("init time0: " + str(round(time.time()*1000) - curr_time))
+
+                _ = self.mapping_network_ema([z, y])
+                _ = self.style_encoder_ema([x, y])
+                _ = self.generator_ema([x, s])
+
+                print("init time1: " + str(round(time.time()*1000) - curr_time))
+
+                """ Checkpoint """
+                self.ckpt = tf.train.Checkpoint(generator_ema=self.generator_ema,
+                                                mapping_network_ema=self.mapping_network_ema,
+                                                style_encoder_ema=self.style_encoder_ema)
+                self.manager = tf.train.CheckpointManager(self.ckpt, self.checkpoint_dir, max_to_keep=1)
 
             if self.manager.latest_checkpoint:
                 self.ckpt.restore(self.manager.latest_checkpoint).expect_partial()
@@ -420,6 +427,8 @@ class StarGAN_v2():
         return "{}_{}_{}{}".format(self.model_name, self.dataset_name, self.gan_type, sn)
 
     def refer_canvas(self, x_real, x_ref, y_trg, path, img_num):
+        # print("params xreal: ", x_real, ", x_ref: ", x_ref, ", y_trg:", y_trg, ", path: ", path, ", img_num: ", img_num)      
+
         if type(img_num) == list:
             # In test phase
             src_img_num = img_num[0]
@@ -432,17 +441,19 @@ class StarGAN_v2():
         x_ref = x_ref[:ref_img_num]
         y_trg = y_trg[:ref_img_num]
 
-        canvas = PIL.Image.new('RGB', (self.img_size * (src_img_num + 1) + 10, self.img_size * (ref_img_num + 1) + 10),
-                               'white')
+        if self.debug_logging:
+            canvas = PIL.Image.new('RGB', (self.img_size * (src_img_num + 1) + 10, self.img_size * (ref_img_num + 1) + 10), 'white')
 
         x_real_post = postprocess_images(x_real)
         x_ref_post = postprocess_images(x_ref)
 
-        for col, src_image in enumerate(list(x_real_post)):
-            canvas.paste(PIL.Image.fromarray(np.uint8(src_image), 'RGB'), ((col + 1) * self.img_size + 10, 0))
+        if self.debug_logging:
+            for col, src_image in enumerate(list(x_real_post)):
+                canvas.paste(PIL.Image.fromarray(np.uint8(src_image), 'RGB'), ((col + 1) * self.img_size + 10, 0))
 
         for row, dst_image in enumerate(list(x_ref_post)):
-            canvas.paste(PIL.Image.fromarray(np.uint8(dst_image), 'RGB'), (0, (row + 1) * self.img_size + 10))
+            if self.debug_logging:
+                canvas.paste(PIL.Image.fromarray(np.uint8(dst_image), 'RGB'), (0, (row + 1) * self.img_size + 10))
 
             row_images = np.stack([dst_image] * src_img_num)
             row_images = preprocess_fit_train_image(row_images)
@@ -454,9 +465,12 @@ class StarGAN_v2():
             for col, image in enumerate(list(row_fake_images)):
                 img = PIL.Image.fromarray(np.uint8(image), 'RGB')
                 img.save(path.replace(".jpg", "_img.jpg"))
-                canvas.paste(PIL.Image.fromarray(np.uint8(image), 'RGB'), ((col + 1) * self.img_size + 10, (row + 1) * self.img_size + 10))
+                
+                if self.debug_logging:
+                    canvas.paste(PIL.Image.fromarray(np.uint8(image), 'RGB'), ((col + 1) * self.img_size + 10, (row + 1) * self.img_size + 10))
 
-        canvas.save(path)
+        if self.debug_logging:
+            canvas.save(path)
 
     def latent_canvas(self, x_real, path):
         canvas = PIL.Image.new('RGB', (self.img_size * (self.num_domains + 1) + 10, self.img_size * self.num_style), 'white')
@@ -588,8 +602,13 @@ class StarGAN_v2():
                                 src_size = 0
 
                                 ref_size = 0
-                                for ref_idx, (ref_img_path, ref_img_domain_) in enumerate(
-                                        zip(reference_images, reference_domain)):
+                                for ref_idx, (ref_img_path, ref_img_domain_) in enumerate(zip(reference_images, reference_domain)):
+                            
+                                    # only generate images from the same domain
+                                    if not self.debug_logging:
+                                        if src_img_path.split(".")[-2] not in ref_img_path:
+                                            continue
+                                    
                                     ref_name, ref_extension = os.path.splitext(ref_img_path)
                                     ref_name = os.path.basename(ref_name)
 
@@ -613,10 +632,10 @@ class StarGAN_v2():
                                             save_path = './{}/ref_{}_{}.jpg'.format(self.result_dir, src_img_path.split("\\")[-1], ref_img_path.split("\\")[-1])
 
                                             if self.debug_logging:
+                                                print("source img path: ", src_img_path, "reference img path: ", ref_img_path)
                                                 print("Save result to: ", save_path)
 
-                                            self.refer_canvas(src_img, ref_img, ref_img_domain, save_path,
-                                                            img_num=merge_size)
+                                            self.refer_canvas(src_img, ref_img, ref_img_domain, save_path, img_num=merge_size)
 
             else:
                 # [1:1] matching
