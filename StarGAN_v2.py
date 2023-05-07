@@ -231,7 +231,8 @@ class StarGAN_v2():
 
             if self.manager.latest_checkpoint:
                 self.ckpt.restore(self.manager.latest_checkpoint).expect_partial()
-                print('Latest checkpoint restored!!')
+                if self.debug_logging:
+                    print('Latest checkpoint restored!!')
             else:
                 print('Not restoring from saved checkpoint')
 
@@ -500,7 +501,8 @@ class StarGAN_v2():
 
         # reference-guided synthesis
         if (self.reference_guided_synthesis):
-            print('reference-guided synthesis')
+            if self.debug_logging:
+                print('reference-guided synthesis')
             reference_path = os.path.join(self.test_dataset_path, 'ref_imgs')
             reference_images = []
             reference_domain = []
@@ -591,8 +593,7 @@ class StarGAN_v2():
                                     ref_name, ref_extension = os.path.splitext(ref_img_path)
                                     ref_name = os.path.basename(ref_name)
 
-                                    ref_img_ = load_images(ref_img_path, self.img_size,
-                                                        self.img_ch)  # [img_size, img_size, img_ch]
+                                    ref_img_ = load_images(ref_img_path, self.img_size, self.img_ch)  # [img_size, img_size, img_ch]
                                     ref_img_ = tf.expand_dims(ref_img_, axis=0)
                                     ref_img_domain_ = tf.expand_dims(ref_img_domain_, axis=0)
 
@@ -639,8 +640,9 @@ class StarGAN_v2():
                         self.refer_canvas(src_img, ref_img, ref_img_domain, save_path, img_num=1)
 
         # latent-guided synthesis
-        if (self.latent_guided_synthesis):
-            print('latent-guided synthesis')
+        if self.latent_guided_synthesis:
+            if self.debug_logging:
+                print('latent-guided synthesis')
             for src_img_path in tqdm(source_images):
                 
                 

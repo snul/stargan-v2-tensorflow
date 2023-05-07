@@ -110,7 +110,7 @@ def main(custom_args=None):
 
     args = parse_args(custom_args)
     
-    automatic_gpu_usage()
+    automatic_gpu_usage(args.debug_logging)
 
     gan = StarGAN_v2(args)
 
@@ -123,7 +123,8 @@ def main(custom_args=None):
         print(" [*] Training finished!")
     else:
         gan.test(args.merge, args.merge_size)
-        print(" [*] Test finished!")
+        if args.debug_logging:
+            print(" [*] Test finished!")
 
 
 
