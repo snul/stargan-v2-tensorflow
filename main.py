@@ -13,7 +13,6 @@ import argparse
 from .utils import *
 import time
 
-gan = False
 
 """parsing and configuration"""
 def parse_args(args):
@@ -108,6 +107,8 @@ def check_args(args):
         print('batch size must be larger than or equal to one')
     return args
 
+gan = None
+
 """main"""
 def main(custom_args=None):
 
@@ -115,11 +116,17 @@ def main(custom_args=None):
     
     automatic_gpu_usage(args.debug_logging)
 
+    global gan
+
     if args.phase == 'train' :
+        gan = StarGAN_v2(args)
+    
+        # build graph
+        gan.build_model()
+
         gan.train()
         print(" [*] Training finished!")
     else:
-        global gan
         
         if not gan:
             print("Model not build yet, building...")
@@ -128,7 +135,8 @@ def main(custom_args=None):
             # build graph
             gan.build_model()
         else: 
-            print("Model already build, reload...")
+            if args.debug_logging:
+                print("Model already build, reload...")
             
             generator_ema = gan.generator_ema
             mapping_network_ema = gan.mapping_network_ema

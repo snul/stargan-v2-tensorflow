@@ -112,6 +112,9 @@ class StarGAN_v2():
             print("# gan type : ", self.gan_type)
             print("# dataset : ", self.dataset_name)
             print("# domain_list : ", self.domain_list)
+            
+            if self.custom_domain_list:
+                print("# custom_domain_list : ", self.custom_domain_list)
 
             print("# batch_size : ", self.batch_size)
             print("# max iteration : ", self.iteration)
@@ -499,6 +502,7 @@ class StarGAN_v2():
         canvas.save(path)
 
     def check_if_domain_contains(self, domain, custom_domain_list):
+        # print("check if domain contains: ", domain, ", custom_domain_list: ", custom_domain_list)
         for custom_domain in custom_domain_list:
             if custom_domain + "_real" == domain:
                 return True
@@ -525,7 +529,7 @@ class StarGAN_v2():
                 reference_path = self.test_ref_dir
 
             for idx, domain in enumerate(self.domain_list):
-                if (self.custom_domain_list):
+                if self.custom_domain_list:
                     
                     if self.check_if_domain_contains(domain, self.custom_domain_list):
                         image_list = glob(os.path.join(reference_path, domain) + '/*.png') + glob(os.path.join(reference_path, domain) + '/*.jpg')
@@ -587,6 +591,8 @@ class StarGAN_v2():
                     for src_idx, src_img_path in tenumerate(source_images):
                         src_name, src_extension = os.path.splitext(src_img_path)
                         src_name = os.path.basename(src_name)
+
+                        # print("load images from: ", src_img_path, ", size: ", self.img_size, ", channel: ", self.img_ch)
 
                         src_img_ = load_images(src_img_path, self.img_size, self.img_ch)  # [img_size, img_size, img_ch]
                         src_img_ = tf.expand_dims(src_img_, axis=0)
