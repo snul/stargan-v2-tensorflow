@@ -212,8 +212,6 @@ class StarGAN_v2():
         else:
             """ Test """
             """ Network """
-            curr_time = round(time.time()*1000)
-
             if not reload_checkpoint_only:
                 self.generator_ema = Generator(self.img_size, self.img_ch, self.style_dim, max_conv_dim=self.hidden_dim, sn=False, name='Generator')
                 self.mapping_network_ema = MappingNetwork(self.style_dim, self.hidden_dim, self.num_domains, sn=False, name='MappingNetwork')
@@ -225,13 +223,9 @@ class StarGAN_v2():
                 z = np.ones(shape=[self.batch_size, self.latent_dim], dtype=np.float32)
                 s = np.ones(shape=[self.batch_size, self.style_dim], dtype=np.float32)
 
-                print("init time0: " + str(round(time.time()*1000) - curr_time))
-
                 _ = self.mapping_network_ema([z, y])
                 _ = self.style_encoder_ema([x, y])
                 _ = self.generator_ema([x, s])
-
-                print("init time1: " + str(round(time.time()*1000) - curr_time))
 
                 """ Checkpoint """
                 self.ckpt = tf.train.Checkpoint(generator_ema=self.generator_ema,
