@@ -86,9 +86,9 @@ class StarGAN_v2():
         self.result_dir = os.path.join(args.result_dir, self.model_dir)
         check_folder(self.result_dir)
         
-        if (args.test_ref_dir):
+        if args.test_ref_dir:
             self.test_ref_dir = args.test_ref_dir
-        if (args.test_src_dir):
+        if args.test_src_dir:
             self.test_src_dir = args.test_src_dir
 
         dataset_path = args.dataset_path
@@ -98,14 +98,15 @@ class StarGAN_v2():
         self.domain_list = sorted([os.path.basename(x) for x in glob(self.dataset_path + '/*')])
         self.num_domains = len(self.domain_list)
 
-        if (args.custom_domain_list):
+        self.custom_domain_list = None
+        if args.custom_domain_list:
             self.custom_domain_list = args.custom_domain_list.split(";")
             
         self.latent_guided_synthesis = args.latent_guided_synthesis
         self.reference_guided_synthesis = args.reference_guided_synthesis
 
         self.debug_logging = args.debug_logging
-        if (self.debug_logging):
+        if self.debug_logging:
             print()
 
             print("##### Information #####")
