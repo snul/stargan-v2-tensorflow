@@ -86,6 +86,9 @@ class StarGAN_v2():
         self.result_dir = os.path.join(args.result_dir, self.model_dir)
         check_folder(self.result_dir)
         
+        self.test_src_dir = None
+        self.test_ref_dir = None
+        
         if args.test_ref_dir:
             self.test_ref_dir = args.test_ref_dir
         if args.test_src_dir:
